@@ -167,6 +167,11 @@ class Application(BaseModel):
     def section(self, kind: SectionKind) -> Section | None:
         return next((s for s in self.sections if s.kind is kind), None)
 
+    @property
+    def full_text(self) -> str:
+        """All section text joined - used when scanning for adjacent skills."""
+        return "\n".join(section.text for section in self.sections)
+
 
 class ClaimStrength(str, Enum):
     """How strongly the candidate phrased the claim.
@@ -277,3 +282,136 @@ _MINIMUM_EVIDENCE_FOR_CLAIM: dict[ClaimStrength, EvidenceLevel] = {
     ClaimStrength.EXPERT: EvidenceLevel.E3,
     ClaimStrength.PROFICIENT: EvidenceLevel.E2,
 }
+
+
+# --------------------------------------------------------------------------
+# Requirement fit
+# --------------------------------------------------------------------------
+
+
+class FitStatus(str, Enum):
+    """How well a candidate meets one requirement.
+
+    `UNADDRESSED` is deliberately distinct from a low score: the candidate did
+    not speak to this criterion at all, which is a different fact about them
+    than having spoken to it weakly.
+    """
+
+    STRONG = "strong"
+    MODERATE = "moderate"
+    WEAK = "weak"
+    UNADDRESSED = "unaddressed"
+
+    @property
+    def label(self) -> str:
+        return _FIT_LABELS[self]
+
+
+_FIT_LABELS: dict[FitStatus, str] = {
+    FitStatus.STRONG: "Strong",
+    FitStatus.MODERATE: "Moderate",
+    FitStatus.WEAK: "Weak",
+    FitStatus.UNADDRESSED: "Unaddressed",
+}
+
+
+class RequirementFit(BaseModel):
+    """How one candidate measures against one requirement, and why."""
+
+    requirement_id: str
+    skill: str
+    necessity: Necessity
+    status: FitStatus
+    evidence_level: EvidenceLevel
+    match_kind: MatchKind
+    claimed_strength: ClaimStrength = ClaimStrength.UNSPECIFIED
+    is_overclaimed: bool = False
+    supporting: list[EvidenceItem] = Field(default_factory=list)
+    closest_evidence: list[str] = Field(default_factory=list)
+    reasons: list[str] = Field(default_factory=list)
+
+    @property
+    def is_required(self) -> bool:
+        return self.necessity is Necessity.REQUIRED
+
+    @property
+    def is_met(self) -> bool:
+        """Whether this counts as genuinely satisfied.
+
+        Moderate is not counted as met: an academic project alone does not
+        demonstrate a required professional capability.
+        """
+        return self.status is FitStatus.STRONG
+
+
+class CandidateAssessment(BaseModel):
+    """A candidate measured against every criterion in the requisition.
+
+    Deliberately exposes a breakdown rather than one number. PS02 forbids
+    collapsing multi-dimensional fit into a single opaque score.
+    """
+
+    application_id: str
+    candidate_name: str
+    fits: list[RequirementFit] = Field(default_factory=list)
+
+    @property
+    def required_fits(self) -> list[RequirementFit]:
+        return [fit for fit in self.fits if fit.is_required]
+
+    @property
+    def strong_required(self) -> list[RequirementFit]:
+        return [fit for fit in self.required_fits if fit.is_met]
+
+    @property
+    def unaddressed_required(self) -> list[RequirementFit]:
+        return [
+            fit
+            for fit in self.required_fits
+            if fit.status is FitStatus.UNADDRESSED
+        ]
+
+    @property
+    def overclaims(self) -> list[RequirementFit]:
+        """Requirements where the candidate asserted more than they showed."""
+        return [fit for fit in self.fits if fit.is_overclaimed]
+
+    @property
+    def below_bar_required(self) -> list[RequirementFit]:
+        """Required criteria the candidate spoke to, but did not demonstrate."""
+        return [
+            fit
+            for fit in self.required_fits
+            if not fit.is_met and fit.status is not FitStatus.UNADDRESSED
+        ]
+
+    @property
+    def summary(self) -> str:
+        """A one-line breakdown - never a bare score.
+
+        Names every required criterion that is not met, and says so separately
+        for "never addressed" and "addressed but not demonstrated". A summary
+        that reported only a count would hide the case PS02 exists to catch:
+        a required area resting on an unsupported claim.
+        """
+        parts = [
+            f"{len(self.strong_required)} of {len(self.required_fits)} "
+            f"required areas strong"
+        ]
+
+        unaddressed = self.unaddressed_required
+        if unaddressed:
+            names = ", ".join(fit.skill for fit in unaddressed)
+            parts.append(f"{len(unaddressed)} unaddressed ({names})")
+
+        below = self.below_bar_required
+        if below:
+            names = ", ".join(fit.skill for fit in below)
+            parts.append(f"{len(below)} below bar ({names})")
+
+        overclaims = self.overclaims
+        if overclaims:
+            plural = "s" if len(overclaims) > 1 else ""
+            parts.append(f"{len(overclaims)} unsupported claim{plural} flagged")
+
+        return "; ".join(parts)
