@@ -150,27 +150,21 @@ The chain is always visible and always in this order:
 
 ## Architecture
 
-```
-Application + Requisition
-          |
-  Requisition analysis  --> required vs preferred, conflict detection
-          |
-  Claim extraction
-          |
-  Terminology normalization
-          |
-  Evidence discovery (within document)
-          |
-  Evidence grading (E0-E4)
-          |
-  Per-requirement assessment
-          |
-  Discrepancy detection
-          |
-  Trade-off analysis  -->  Pool gap detection
-          |
-  Explainable shortlist  ->  human decision
-```
+![EvidenceHire system architecture](docs/architecture.png)
+
+The console loads the requisition and the applications. Three parsers read
+them — requisition analysis, claim extraction, terminology matching — and all
+three deliver into the evidence grader, which decides how well-supported each
+claim is before anything downstream is allowed to trust it.
+
+### Screening workflow
+
+![EvidenceHire screening workflow](docs/workflow.png)
+
+Eight stages from raw application to human decision. Grading is the pivot:
+nothing after it treats a claim as proven until the evidence behind that claim
+has been placed on the ladder. The final stage is a person — the system
+produces an auditable assessment, never a hiring decision.
 
 ### Project structure
 

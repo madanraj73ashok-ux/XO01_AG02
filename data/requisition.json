@@ -1,0 +1,56 @@
+{
+  "id": "REQ-2026-014",
+  "title": "Junior Robotics Software Engineer",
+  "seniority": "junior",
+  "requirements": [
+    {
+      "id": "R1",
+      "skill": "Python",
+      "necessity": "required",
+      "min_years": 1,
+      "description": "Production Python for robotics tooling and data processing."
+    },
+    {
+      "id": "R2",
+      "skill": "ROS 2",
+      "necessity": "required",
+      "min_years": 5,
+      "description": "Node development, navigation stack, launch configuration."
+    },
+    {
+      "id": "R3",
+      "skill": "Robotics",
+      "necessity": "required",
+      "min_years": null,
+      "description": "Autonomous mobile robots, kinematics, sensor integration."
+    },
+    {
+      "id": "R4",
+      "skill": "Version Control",
+      "necessity": "required",
+      "min_years": null,
+      "description": "Collaborative branching workflow on a shared repository."
+    },
+    {
+      "id": "R5",
+      "skill": "Cloud Deployment",
+      "necessity": "required",
+      "min_years": null,
+      "description": "Deploying and operating containerised services in production."
+    },
+    {
+      "id": "R6",
+      "skill": "Computer Vision",
+      "necessity": "preferred",
+      "min_years": null,
+      "description": "Perception pipelines, camera calibration, object detection."
+    },
+    {
+      "id": "R7",
+      "skill": "Simulation",
+      "necessity": "preferred",
+      "min_years": null,
+      "description": "Gazebo or equivalent simulation for testing robot behaviour."
+    }
+  ]
+}

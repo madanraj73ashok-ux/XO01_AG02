@@ -1,0 +1,26 @@
+{
+  "id": "A-07",
+  "candidate_name": "Priya Raman",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, ROS 2, OpenCV, AWS, Git, Gazebo"
+    },
+    {
+      "kind": "experience",
+      "text": "Robotics Software Intern, Vayu Robotics (Jan 2026 - Jun 2026). Developed and maintained ROS 2 Humble nodes for an autonomous mobile robot, including a Nav2-based navigation stack and sensor fusion between LiDAR and wheel odometry. Wrote the Python tooling used to replay and analyse recorded runs. Collaborated through a shared GitLab repository using a branching workflow with code review."
+    },
+    {
+      "kind": "projects",
+      "text": "Autonomous Mobile Robot - built a differential-drive robot running ROS 2 Humble with Nav2 path planning and a Gazebo simulation environment for testing. Implemented an OpenCV pipeline for cone detection used during navigation."
+    },
+    {
+      "kind": "education",
+      "text": "B.Tech Mechatronics, 2026. Coursework included Robotics, Control Systems and Computer Vision."
+    },
+    {
+      "kind": "cover_note",
+      "text": "I am an expert in AWS and cloud infrastructure. I am proficient in ROS 2 and Python from my internship and personal projects."
+    }
+  ]
+}

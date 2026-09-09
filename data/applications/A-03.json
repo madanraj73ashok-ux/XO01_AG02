@@ -1,0 +1,26 @@
+{
+  "id": "A-03",
+  "candidate_name": "Arun Kalyan",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, Arduino, Machine Learning, Docker, Git"
+    },
+    {
+      "kind": "experience",
+      "text": "No professional experience yet."
+    },
+    {
+      "kind": "projects",
+      "text": "Line-following robot built on Arduino with infrared sensors, programmed in C++. Containerised a small Python web service with Docker for a college assignment."
+    },
+    {
+      "kind": "education",
+      "text": "B.E. Computer Science, 2027. Completed an introductory course in Robotics and a MOOC on Machine Learning."
+    },
+    {
+      "kind": "cover_note",
+      "text": "I have expert knowledge of robotics and advanced machine learning skills. I am familiar with cloud deployment concepts from coursework."
+    }
+  ]
+}
