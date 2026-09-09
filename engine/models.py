@@ -415,3 +415,76 @@ class CandidateAssessment(BaseModel):
             parts.append(f"{len(overclaims)} unsupported claim{plural} flagged")
 
         return "; ".join(parts)
+
+
+# --------------------------------------------------------------------------
+# Contradictions
+# --------------------------------------------------------------------------
+
+
+class ContradictionKind(str, Enum):
+    """Categories of internal conflict found inside a single application."""
+
+    DURATION_UNSUPPORTED = "duration_unsupported"
+    EXPERTISE_UNSUPPORTED = "expertise_unsupported"
+    COVER_NOTE_ONLY = "cover_note_only"
+    TIMELINE_IMPLAUSIBLE = "timeline_implausible"
+
+    @property
+    def label(self) -> str:
+        return _CONTRADICTION_LABELS[self]
+
+
+_CONTRADICTION_LABELS: dict[ContradictionKind, str] = {
+    ContradictionKind.DURATION_UNSUPPORTED:
+        "Claimed duration exceeds the experience actually described",
+    ContradictionKind.EXPERTISE_UNSUPPORTED:
+        "Claimed expertise is not carried by the evidence",
+    ContradictionKind.COVER_NOTE_ONLY:
+        "Asserted in the cover note but absent from the rest of the application",
+    ContradictionKind.TIMELINE_IMPLAUSIBLE:
+        "Claimed professional duration does not fit the stated timeline",
+}
+
+
+class Contradiction(BaseModel):
+    """One internal conflict, always carrying the text that caused the flag.
+
+    The rule this type exists to enforce: the system never invents missing
+    evidence. `claim_text` is quoted from the application, and every entry in
+    `counter_evidence` quotes a real span too. Where the conflict *is* an
+    absence, that is stated as an absence and the sections searched are named -
+    never dressed up as a discovered fact.
+    """
+
+    kind: ContradictionKind
+    subject: str
+    claim_text: str
+    claim_section: SectionKind
+    counter_evidence: list[EvidenceItem] = Field(default_factory=list)
+    evidence_note: str
+    assessment: str
+    confidence_effect: str = "Reduced"
+
+    @property
+    def flag(self) -> str:
+        return "CONTRADICTORY / UNSUPPORTED CLAIM"
+
+    def render(self) -> str:
+        """The reviewer-facing block, in the order a recruiter reads it."""
+        lines = [
+            f"Claim:      {self.claim_text}",
+            f"Evidence:   {self.evidence_note}",
+        ]
+        lines.extend(
+            f"            - {item.section.value}: \"{item.source_text}\""
+            for item in self.counter_evidence
+        )
+        lines.extend(
+            [
+                f"Assessment: {self.assessment}",
+                f"Confidence: {self.confidence_effect}",
+                f"Flag:       {self.flag}",
+            ]
+        )
+        return "\n".join(lines)

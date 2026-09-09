@@ -72,8 +72,13 @@ def test_does_not_match_a_skill_inside_a_longer_word() -> None:
 
 def test_loads_the_demo_applications() -> None:
     applications = load_applications(DATA)
+    ids = [a.id for a in applications]
 
-    assert [a.id for a in applications] == ["A-03", "A-07"]
+    # Ordered by id, and every file in the directory is loaded. Asserted this
+    # way so adding a candidate to the dataset does not break the test.
+    assert ids == sorted(ids)
+    assert {"A-03", "A-07"} <= set(ids)
+    assert len(ids) == len(list(DATA.glob("*.json")))
 
 
 def test_hero_candidate_claims_cloud_only_in_the_cover_note() -> None:

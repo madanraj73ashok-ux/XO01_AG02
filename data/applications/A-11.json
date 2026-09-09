@@ -1,0 +1,26 @@
+{
+  "id": "A-11",
+  "candidate_name": "Vikram Desai",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, Docker, Machine Learning, Git. 5 years of Python experience."
+    },
+    {
+      "kind": "experience",
+      "text": "Software Engineering Intern, Nexa Systems (Jan 2024 - Dec 2024). Wrote Python scripts for internal reporting and helped maintain a Docker build pipeline."
+    },
+    {
+      "kind": "projects",
+      "text": "Course capstone: a Python data dashboard using pandas and matplotlib."
+    },
+    {
+      "kind": "education",
+      "text": "B.Tech Computer Science, 2021 - 2025. Coursework in Machine Learning and Databases."
+    },
+    {
+      "kind": "cover_note",
+      "text": "I am an expert in cloud deployment and have advanced machine learning skills."
+    }
+  ]
+}
