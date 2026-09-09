@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EvidenceHire — Screening Workflow</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f5f5f5; --ink:#2d3142; --muted:#4f5d75; --soft:#7a8399;
+    --accent:#eb6c36;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);font-family:'Geist',sans-serif;color:var(--ink);}
+  header{padding:32px 40px 8px;}
+  .eyebrow{font-family:'Geist Mono',monospace;font-size:8px;letter-spacing:0.18em;
+           text-transform:uppercase;color:var(--soft);margin:0 0 8px;}
+  h1{font-family:'Instrument Serif',serif;font-weight:400;font-size:1.75rem;margin:0 0 4px;}
+  .sub{font-size:13px;color:var(--muted);margin:0 0 16px;max-width:680px;}
+  .wrap{padding:0 24px 24px;}
+  svg{width:100%;height:auto;display:block;}
+</style>
+</head>
+<body>
+<header>
+  <p class="eyebrow">EVIDENCEHIRE · PS02 · X'O CODE 2026</p>
+  <h1>Screening Workflow</h1>
+  <p class="sub">Eight stages from raw application to human decision. Grading sits at the
+  centre: nothing downstream is allowed to treat a claim as proven until the evidence
+  behind it has been placed on the ladder.</p>
+</header>
+<div class="wrap">
+<svg viewBox="0 0 960 512" role="img" aria-labelledby="eh-flow-title eh-flow-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="eh-flow-title">EvidenceHire screening workflow</title>
+<desc id="eh-flow-desc">An eight-stage pipeline running left to right then back: application intake, requisition analysis with conflict detection, claim extraction, terminology matching, then evidence grading on the E0 to E4 ladder, requirement assessment, trade-off and pool-gap analysis, ending at a human hiring decision.</desc>
+
+<rect width="960" height="512" fill="#f5f5f5"/>
+
+<defs>
+  <marker id="wf-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+  </marker>
+  <marker id="wf-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+  </marker>
+</defs>
+
+<!-- ============ arrows (before boxes) ============ -->
+<path d="M220,140 H252" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#wf-arrow)"/>
+<path d="M460,140 H492" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#wf-arrow)"/>
+<path d="M700,140 H732" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#wf-arrow-accent)"/>
+
+<path d="M840,180 V292" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#wf-arrow-accent)"/>
+
+<path d="M740,340 H708" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#wf-arrow)"/>
+<path d="M500,340 H468" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#wf-arrow)"/>
+<path d="M260,340 H228" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#wf-arrow)"/>
+
+<!-- ============ row 1 nodes ============ -->
+
+<rect x="20" y="100" width="200" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="20" y="100" width="200" height="80" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="0.8"/>
+<rect x="28" y="108" width="16" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.6)" stroke-width="0.8"/>
+<text x="36" y="117" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+<text x="120" y="140" fill="#2d3142" font-size="12" font-weight="600"
+      font-family="'Geist', sans-serif" text-anchor="middle">Intake</text>
+<text x="120" y="156" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">requisition +</text>
+<text x="120" y="168" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">application</text>
+
+<rect x="260" y="100" width="200" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="260" y="100" width="200" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="268" y="108" width="16" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+<text x="276" y="117" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">2</text>
+<text x="360" y="140" fill="#2d3142" font-size="12" font-weight="600"
+      font-family="'Geist', sans-serif" text-anchor="middle">Requisition Analysis</text>
+<text x="360" y="156" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">required vs preferred</text>
+<text x="360" y="168" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">conflict flagged</text>
+
+<rect x="500" y="100" width="200" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="500" y="100" width="200" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="508" y="108" width="16" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+<text x="516" y="117" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">3</text>
+<text x="600" y="140" fill="#2d3142" font-size="12" font-weight="600"
+      font-family="'Geist', sans-serif" text-anchor="middle">Claim Extraction</text>
+<text x="600" y="156" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">what was asserted,</text>
+<text x="600" y="168" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">and where</text>
+
+<rect x="740" y="100" width="200" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="740" y="100" width="200" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<rect x="748" y="108" width="16" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+<text x="756" y="117" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">4</text>
+<text x="840" y="140" fill="#2d3142" font-size="12" font-weight="600"
+      font-family="'Geist', sans-serif" text-anchor="middle">Terminology Match</text>
+<text x="840" y="156" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">equivalent accepted,</text>
+<text x="840" y="168" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">adjacent refused</text>
+
+<!-- ============ row 2 nodes ============ -->
+
+<rect x="740" y="300" width="200" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="740" y="300" width="200" height="80" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+<rect x="748" y="308" width="16" height="12" rx="2" fill="transparent" stroke="rgba(235,108,54,0.55)" stroke-width="0.8"/>
+<text x="756" y="317" fill="#eb6c36" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">5</text>
+<text x="840" y="340" fill="#2d3142" font-size="12" font-weight="600"
+      font-family="'Geist', sans-serif" text-anchor="middle">Evidence Grading</text>
+<text x="840" y="356" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">E0 - E4 ladder</text>
+<text x="840" y="368" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">claim is not evidence</text>
+
+<rect x="500" y="300" width="200" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="500" y="300" width="200" height="80" rx="6" fill="rgba(45,49,66,0.02)"
+      stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<rect x="508" y="308" width="16" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.25)" stroke-width="0.8"/>
+<text x="516" y="317" fill="rgba(45,49,66,0.5)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">6</text>
+<text x="600" y="340" fill="#4f5d75" font-size="12" font-weight="600"
+      font-family="'Geist', sans-serif" text-anchor="middle">Requirement Fit</text>
+<text x="600" y="356" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">per criterion,</text>
+<text x="600" y="368" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">with reasons</text>
+
+<rect x="260" y="300" width="200" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="260" y="300" width="200" height="80" rx="6" fill="rgba(45,49,66,0.02)"
+      stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<rect x="268" y="308" width="16" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.25)" stroke-width="0.8"/>
+<text x="276" y="317" fill="rgba(45,49,66,0.5)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">7</text>
+<text x="360" y="340" fill="#4f5d75" font-size="12" font-weight="600"
+      font-family="'Geist', sans-serif" text-anchor="middle">Trade-offs + Pool Gap</text>
+<text x="360" y="356" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">no single score</text>
+<text x="360" y="368" fill="#7a8399" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">unmet criteria named</text>
+
+<rect x="20" y="300" width="200" height="80" rx="6" fill="#f5f5f5"/>
+<rect x="20" y="300" width="200" height="80" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="0.8"/>
+<rect x="28" y="308" width="16" height="12" rx="2" fill="transparent" stroke="rgba(122,131,153,0.6)" stroke-width="0.8"/>
+<text x="36" y="317" fill="#7a8399" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">8</text>
+<text x="120" y="340" fill="#2d3142" font-size="12" font-weight="600"
+      font-family="'Geist', sans-serif" text-anchor="middle">Human Decision</text>
+<text x="120" y="356" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">recruiter decides;</text>
+<text x="120" y="368" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace"
+      text-anchor="middle">system never does</text>
+
+<!-- ============ legend ============ -->
+<line x1="40" y1="440" x2="920" y2="440" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<text x="40" y="456" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace"
+      letter-spacing="0.14em">LEGEND</text>
+
+<rect x="140" y="448" width="14" height="14" rx="3" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+<text x="162" y="459" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Grading stage (focal)</text>
+
+<rect x="330" y="448" width="14" height="14" rx="3" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+<text x="352" y="459" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Built</text>
+
+<rect x="450" y="448" width="14" height="14" rx="3" fill="rgba(45,49,66,0.02)"
+      stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="472" y="459" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Planned</text>
+
+<rect x="590" y="448" width="14" height="14" rx="3" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="0.8"/>
+<text x="612" y="459" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Human boundary</text>
+
+</svg>
+</div>
+</body>
+</html>
