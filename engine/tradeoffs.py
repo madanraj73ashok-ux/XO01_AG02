@@ -38,6 +38,20 @@ def build_shortlist(assessments: list[CandidateAssessment]) -> list[ShortlistEnt
     ]
 
 
+def full_requisition_message(assessments: list[CandidateAssessment]) -> str:
+    """State the full-requisition result without turning it into a match score."""
+    qualified = [assessment.candidate_name for assessment in assessments if _fully_qualified(assessment)]
+    if not qualified:
+        return "No candidate fully satisfies all required criteria."
+    if len(qualified) == 1:
+        return f"{qualified[0]} fully satisfies all required criteria."
+    return f"{', '.join(qualified)} fully satisfy all required criteria."
+
+
+def _fully_qualified(assessment: CandidateAssessment) -> bool:
+    return len(assessment.strong_required) == len(assessment.required_fits)
+
+
 def compare(left: CandidateAssessment, right: CandidateAssessment) -> Comparison:
     """Compare two candidates axis by axis, without declaring a winner."""
     left_scores = {d.dimension: d for d in _dimensions(left)}

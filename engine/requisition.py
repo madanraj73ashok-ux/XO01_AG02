@@ -51,6 +51,7 @@ def detect_conflicts(requisition: Requisition) -> list[RequirementConflict]:
     return [
         *_detect_seniority_mismatches(requisition),
         *_detect_duplicates(requisition),
+        *_detect_salary_caps(requisition),
     ]
 
 
@@ -101,6 +102,30 @@ def _detect_duplicates(requisition: Requisition) -> list[RequirementConflict]:
         )
         for group in by_skill.values()
         if len(group) > 1
+    ]
+
+
+def _detect_salary_caps(requisition: Requisition) -> list[RequirementConflict]:
+    """Surface a compensation ceiling as a recruiter-owned restriction.
+
+    A cap is not a judgement about an applicant. It is a restrictive condition
+    on the requisition that has to remain visible next to technical criteria.
+    """
+    return [
+        RequirementConflict(
+            kind=ConflictKind.RESTRICTIVE_SALARY_CAP,
+            requirement_ids=[requirement.id],
+            detail=(
+                f"'{requirement.skill}' caps compensation at "
+                f"₹{requirement.max_salary_lpa:g} LPA."
+            ),
+            recommendation=(
+                "Recruiter review required: confirm this ceiling is compatible "
+                "with the required experience and skills."
+            ),
+        )
+        for requirement in requisition.requirements
+        if requirement.max_salary_lpa is not None
     ]
 
 

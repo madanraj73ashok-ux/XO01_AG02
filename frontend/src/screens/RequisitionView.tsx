@@ -18,7 +18,7 @@ export default function RequisitionView({ data }: { data: Requisition }) {
       {data.conflicts.length > 0 && (
         <div>
           <SectionTitle hint="Found in the requisition itself. Reported for review, never silently resolved.">
-            Requirement conflicts
+            Requirement conflicts and restrictions
           </SectionTitle>
           <div className="space-y-3">
             {data.conflicts.map((conflict, index) => (
@@ -81,6 +81,11 @@ function RequirementColumn({
                 {requirement.minYears !== null && (
                   <p className="mt-1 font-mono text-xs text-amber-300">
                     {requirement.minYears}+ yrs
+                  </p>
+                )}
+                {requirement.maxSalaryLpa !== null && (
+                  <p className="mt-1 font-mono text-xs text-amber-300">
+                    ≤ ₹{requirement.maxSalaryLpa} LPA
                   </p>
                 )}
               </div>

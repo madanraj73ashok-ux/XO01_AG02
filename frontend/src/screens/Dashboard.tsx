@@ -60,12 +60,18 @@ export default function Dashboard({ data }: { data: DashboardData }) {
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
           <p className="text-sm text-amber-200">
             <span className="font-semibold">
-              {data.requisitionConflicts} conflict
-              {data.requisitionConflicts > 1 ? "s" : ""} in the requisition itself.
+              {data.requisitionConflicts} requisition issue
+              {data.requisitionConflicts > 1 ? "s" : ""} found.
             </span>{" "}
             Surfaced for recruiter review, never resolved automatically — see the
             Requisition tab.
           </p>
+        </div>
+      )}
+
+      {data.fullyQualified === 0 && (
+        <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
+          {data.fullRequisitionMessage}
         </div>
       )}
 

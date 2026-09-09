@@ -82,6 +82,7 @@ export interface CandidateDetail {
   sections: { kind: string; text: string }[];
   fits: Fit[];
   contradictions: Contradiction[];
+  requisitionIssues: RequisitionIssue[];
 }
 
 export interface Requirement {
@@ -89,10 +90,18 @@ export interface Requirement {
   skill: string;
   necessity: "required" | "preferred";
   minYears: number | null;
+  maxSalaryLpa: number | null;
   description: string;
 }
 
 export interface Conflict {
+  kind: string;
+  requirementIds: string[];
+  detail: string;
+  recommendation: string;
+}
+
+export interface RequisitionIssue {
   kind: string;
   requirementIds: string[];
   detail: string;
@@ -137,6 +146,7 @@ export interface Dashboard {
   overclaims: number;
   contradictions: number;
   fullyQualified: number;
+  fullRequisitionMessage: string;
   evidenceSpread: { level: string; count: number }[];
   coverage: Coverage[];
 }

@@ -32,9 +32,11 @@ SKILL_ALIASES: dict[str, set[str]] = {
     "Cloud Deployment": {"cloud deployment", "aws", "amazon web services",
                          "azure", "gcp", "google cloud", "cloud infrastructure"},
     "Containerization": {"containerization", "docker", "podman", "containers"},
+    "Kubernetes": {"kubernetes", "k8s", "kube"},
     "Simulation": {"simulation", "gazebo", "rviz", "isaac sim", "webots"},
     "Machine Learning": {"machine learning", "ml", "supervised learning",
-                         "scikit-learn", "sklearn"},
+                         "scikit-learn", "sklearn", "ai/ml", "ai ml",
+                         "artificial intelligence"},
     "Deep Learning": {"deep learning", "neural networks", "pytorch",
                       "tensorflow", "cnn"},
 }

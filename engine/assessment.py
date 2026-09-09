@@ -20,12 +20,14 @@ from __future__ import annotations
 import re
 
 from engine.claims import extract_claims
+from engine.contradictions import find_contradictions
 from engine.equivalence import RELATED_SKILLS, canonical_for, normalize
 from engine.evidence import grade_claims
 from engine.models import (
     Application,
     CandidateAssessment,
     ClaimAssessment,
+    EvidenceItem,
     EvidenceLevel,
     FitStatus,
     MatchKind,
@@ -45,6 +47,17 @@ STATUS_FOR_LEVEL: dict[EvidenceLevel, FitStatus] = {
     EvidenceLevel.E4: FitStatus.STRONG,
 }
 
+_EXPERIENCE_REQUIREMENTS = {
+    "experience",
+    "professional experience",
+    "years of experience",
+}
+_YEARS = re.compile(r"(\d+(?:\.\d+)?)\s*\+?\s*years?\b", re.IGNORECASE)
+_SALARY = re.compile(
+    r"(?:₹|rs\.?\s*)?\s*(\d+(?:\.\d+)?)\s*(?:lpa|lakhs?(?:\s+per\s+annum)?)\b",
+    re.IGNORECASE,
+)
+
 
 def assess_candidate(
     application: Application, requisition: Requisition
@@ -55,13 +68,18 @@ def assess_candidate(
         for assessment in grade_claims(extract_claims(application))
     }
 
+    contradictions = find_contradictions(application)
+    fits = [
+        _with_contradiction_context(
+            _fit_for(requirement, graded, application), contradictions
+        )
+        for requirement in requisition.requirements
+    ]
+
     return CandidateAssessment(
         application_id=application.id,
         candidate_name=application.candidate_name,
-        fits=[
-            _fit_for(requirement, graded, application)
-            for requirement in requisition.requirements
-        ],
+        fits=fits,
     )
 
 
@@ -78,6 +96,14 @@ def _fit_for(
     application: Application,
 ) -> RequirementFit:
     """Decide how a candidate measures against one requirement."""
+    if requirement.max_salary_lpa is not None:
+        return _salary_fit(requirement, application)
+    if (
+        requirement.min_years is not None
+        and normalize(requirement.skill) in _EXPERIENCE_REQUIREMENTS
+    ):
+        return _experience_fit(requirement, application)
+
     canonical = canonical_for(requirement.skill) or requirement.skill
     assessment = graded.get(canonical)
 
@@ -99,6 +125,129 @@ def _fit_for(
         supporting=assessment.supporting,
         reasons=_reasons(assessment, match_kind, status),
     )
+
+
+def _experience_fit(requirement: Requirement, application: Application) -> RequirementFit:
+    """Assess an explicitly stated total-experience constraint.
+
+    This intentionally uses only a number the candidate actually supplied. If
+    none is present, the outcome is insufficient evidence, not a claim that
+    the candidate lacks experience.
+    """
+    stated = _stated_numbers(application, _YEARS)
+    if not stated:
+        return _constraint_unaddressed(
+            requirement,
+            "The application does not state verifiable years of experience; "
+            "this is insufficient evidence, not proof the candidate lacks it.",
+        )
+
+    years, evidence = max(stated, key=lambda item: item[0])
+    minimum = requirement.min_years or 0.0
+    met = years >= minimum
+    return _constraint_fit(
+        requirement,
+        met=met,
+        evidence=evidence,
+        reason=(
+            f"Candidate states {years:g} year(s) of experience, meeting the "
+            f"{minimum:g}+ year requirement."
+            if met
+            else f"Candidate states {years:g} year(s) of experience, below the "
+            f"{minimum:g}+ year requirement."
+        ),
+    )
+
+
+def _salary_fit(requirement: Requirement, application: Application) -> RequirementFit:
+    """Assess a stated compensation expectation without treating silence as lack."""
+    stated = _stated_numbers(application, _SALARY)
+    if not stated:
+        return _constraint_unaddressed(
+            requirement,
+            "The application does not state a salary expectation; this is "
+            "insufficient evidence, not proof the candidate exceeds the cap.",
+        )
+
+    cap = requirement.max_salary_lpa or 0.0
+    amount, evidence = max(stated, key=lambda item: item[0])
+    met = amount <= cap
+    return _constraint_fit(
+        requirement,
+        met=met,
+        evidence=evidence,
+        reason=(
+            f"Candidate states ₹{amount:g} LPA, within the ₹{cap:g} LPA cap."
+            if met
+            else f"Candidate states ₹{amount:g} LPA, above the ₹{cap:g} LPA cap."
+        ),
+    )
+
+
+def _stated_numbers(
+    application: Application, pattern: re.Pattern[str]
+) -> list[tuple[float, EvidenceItem]]:
+    values: list[tuple[float, EvidenceItem]] = []
+    for section in application.sections:
+        for sentence in re.split(r"(?<=[.!?])\s+|\n+", section.text):
+            for match in pattern.finditer(sentence):
+                values.append(
+                    (
+                        float(match.group(1)),
+                        EvidenceItem(
+                            section=section.kind,
+                            source_text=sentence.strip(),
+                            weight=1,
+                            note="Candidate-stated constraint; confirm during recruiter review",
+                        ),
+                    )
+                )
+    return values
+
+
+def _constraint_unaddressed(requirement: Requirement, reason: str) -> RequirementFit:
+    return RequirementFit(
+        requirement_id=requirement.id,
+        skill=requirement.skill,
+        necessity=requirement.necessity,
+        status=FitStatus.UNADDRESSED,
+        evidence_level=EvidenceLevel.E0,
+        match_kind=MatchKind.NONE,
+        reasons=[reason],
+    )
+
+
+def _constraint_fit(
+    requirement: Requirement,
+    *,
+    met: bool,
+    evidence: EvidenceItem,
+    reason: str,
+) -> RequirementFit:
+    return RequirementFit(
+        requirement_id=requirement.id,
+        skill=requirement.skill,
+        necessity=requirement.necessity,
+        status=FitStatus.STRONG if met else FitStatus.WEAK,
+        evidence_level=EvidenceLevel.E1,
+        match_kind=MatchKind.EXACT,
+        supporting=[evidence],
+        reasons=[reason, evidence.note],
+    )
+
+
+def _with_contradiction_context(fit: RequirementFit, contradictions) -> RequirementFit:
+    """Lower confidence, never the evidence grade, for a related contradiction."""
+    skill = normalize(fit.skill)
+    related = [
+        contradiction
+        for contradiction in contradictions
+        if skill in normalize(contradiction.subject)
+        or normalize(contradiction.subject) in skill
+    ]
+    if not related:
+        return fit
+    return fit.model_copy(update={"contradiction_count": len(related)})
 
 
 def _unaddressed(

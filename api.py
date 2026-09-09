@@ -30,7 +30,7 @@ from engine.models import (
 )
 from engine.poolgap import analyse_pool, gaps
 from engine.requisition import detect_conflicts, load_requisition
-from engine.tradeoffs import build_shortlist, compare
+from engine.tradeoffs import build_shortlist, compare, full_requisition_message
 
 DATA = Path(__file__).parent / "data"
 
@@ -197,6 +197,7 @@ def get_requisition() -> dict[str, Any]:
                 "skill": r.skill,
                 "necessity": r.necessity.value,
                 "minYears": r.min_years,
+                "maxSalaryLpa": r.max_salary_lpa,
                 "description": r.description,
             }
             for r in requisition.requirements
@@ -230,6 +231,9 @@ def list_candidates() -> list[dict[str, Any]]:
                 "summary": assessment.summary,
                 "bestFit": entry["bestFit"],
                 "tradeoff": entry["tradeoff"],
+                "strengths": entry["strengths"],
+                "gaps": entry["gaps"],
+                "risks": entry["risks"],
                 "dimensions": entry["dimensions"],
                 "requiredTotal": len(assessment.required_fits),
                 "requiredStrong": len(assessment.strong_required),
@@ -237,6 +241,8 @@ def list_candidates() -> list[dict[str, Any]]:
                 "overclaims": len(assessment.overclaims),
                 "contradictions": len(contradictions),
                 "stage": _stage(assessment, contradictions),
+                "fullyQualified": len(assessment.strong_required)
+                == len(assessment.required_fits),
             }
         )
     return sorted(payload, key=lambda item: item["rank"])
@@ -247,6 +253,7 @@ def get_candidate(application_id: str) -> dict[str, Any]:
     application = _application(application_id)
     assessment = _assessment(application_id)
     contradictions = find_contradictions(application)
+    requisition, _, _ = _state()
 
     return {
         "applicationId": assessment.application_id,
@@ -257,6 +264,17 @@ def get_candidate(application_id: str) -> dict[str, Any]:
         "unaddressed": len(assessment.unaddressed_required),
         "overclaims": len(assessment.overclaims),
         "stage": _stage(assessment, contradictions),
+        "fullyQualified": len(assessment.strong_required)
+        == len(assessment.required_fits),
+        "requisitionIssues": [
+            {
+                "kind": issue.kind.value,
+                "requirementIds": issue.requirement_ids,
+                "detail": issue.detail,
+                "recommendation": issue.recommendation,
+            }
+            for issue in detect_conflicts(requisition)
+        ],
         "sections": [
             {"kind": s.kind.value, "text": s.text} for s in application.sections
         ],
@@ -353,6 +371,7 @@ def get_dashboard() -> dict[str, Any]:
         "fullyQualified": sum(
             1 for a in assessments if len(a.strong_required) == len(a.required_fits)
         ),
+        "fullRequisitionMessage": full_requisition_message(assessments),
         "evidenceSpread": [
             {"level": level, "count": spread.get(level, 0)}
             for level in ("E0", "E1", "E2", "E3", "E4")

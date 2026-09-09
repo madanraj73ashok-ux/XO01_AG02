@@ -82,10 +82,11 @@ _EVIDENCE_RANKS: dict[EvidenceLevel, int] = {
 
 
 class ConflictKind(str, Enum):
-    """Categories of internal inconsistency found in a requisition itself."""
+    """Categories of requisition conflicts and restrictive conditions."""
 
     SENIORITY_EXPERIENCE_MISMATCH = "seniority_experience_mismatch"
     DUPLICATE_REQUIREMENT = "duplicate_requirement"
+    RESTRICTIVE_SALARY_CAP = "restrictive_salary_cap"
 
 
 class Requirement(BaseModel):
@@ -95,6 +96,7 @@ class Requirement(BaseModel):
     skill: str
     necessity: Necessity
     min_years: float | None = None
+    max_salary_lpa: float | None = Field(default=None, ge=0)
     description: str = ""
 
     @property
@@ -103,9 +105,9 @@ class Requirement(BaseModel):
 
 
 class RequirementConflict(BaseModel):
-    """An internal inconsistency in the requisition, surfaced for human review.
+    """A requisition conflict or restriction, surfaced for human review.
 
-    Conflicts are reported, never silently resolved - the recruiter decides.
+    It is reported, never silently resolved - the recruiter decides.
     """
 
     kind: ConflictKind
@@ -329,6 +331,7 @@ class RequirementFit(BaseModel):
     supporting: list[EvidenceItem] = Field(default_factory=list)
     closest_evidence: list[str] = Field(default_factory=list)
     reasons: list[str] = Field(default_factory=list)
+    contradiction_count: int = Field(default=0, ge=0)
 
     @property
     def is_required(self) -> bool:
@@ -364,6 +367,13 @@ class RequirementFit(BaseModel):
             factors.append(("Matched on equivalent wording, not exact", -0.05))
         if self.match_kind is MatchKind.RELATED:
             factors.append(("Only adjacent technology found", -0.10))
+        if self.contradiction_count:
+            factors.append(
+                (
+                    f"{self.contradiction_count} related contradiction(s) require review",
+                    -0.15 * self.contradiction_count,
+                )
+            )
         return factors
 
     @property

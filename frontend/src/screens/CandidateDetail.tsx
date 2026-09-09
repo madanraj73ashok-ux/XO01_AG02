@@ -109,6 +109,33 @@ export default function CandidateDetail({
         </div>
       )}
 
+      {data.requisitionIssues.length > 0 && (
+        <div>
+          <SectionTitle hint="These are constraints or conflicts in the requisition, not findings about this candidate.">
+            Requisition constraints affecting this review
+          </SectionTitle>
+          <div className="space-y-3">
+            {data.requisitionIssues.map((issue, index) => (
+              <div
+                key={index}
+                className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4"
+              >
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <Badge className="bg-amber-500/20 text-amber-200">
+                    {issue.kind.replace(/_/g, " ")}
+                  </Badge>
+                  <span className="font-mono text-[10px] text-soft">
+                    {issue.requirementIds.join(", ")}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-100">{issue.detail}</p>
+                <p className="mt-2 text-xs text-soft">{issue.recommendation}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <SectionTitle hint="Expand any criterion to see the evidence, the reasoning and the confidence arithmetic behind the verdict.">
           Requirement assessment
