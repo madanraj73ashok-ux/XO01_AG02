@@ -1,1 +1,0 @@
-{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/components/ui.tsx","./src/screens/candidatedetail.tsx","./src/screens/candidatelist.tsx","./src/screens/compare.tsx","./src/screens/dashboard.tsx","./src/screens/poolgaps.tsx","./src/screens/requisitionview.tsx"],"version":"5.9.3"}

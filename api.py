@@ -16,6 +16,8 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+import routes as product_routes
+
 from engine.assessment import assess_pool
 from engine.claims import load_applications
 from engine.contradictions import find_contradictions
@@ -40,9 +42,15 @@ app = FastAPI(title="EvidenceHire API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_methods=["GET"],
+    # POST is needed now that recruiters create requisitions and candidates
+    # submit applications; the original console was read-only.
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+# The two-sided product lives in `routes.py`. It is mounted rather than merged
+# so the original console's endpoints keep their exact shape.
+app.include_router(product_routes.router)
 
 
 @lru_cache(maxsize=1)

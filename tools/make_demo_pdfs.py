@@ -44,6 +44,10 @@ SCANNED_IDS = frozenset({"A-02", "A-05", "A-08", "A-11"})
 
 SCAN_DPI = 200
 
+# High enough that recognition stays reliable, low enough that a two-page scan
+# lands in the few-megabyte range a real upload would.
+JPEG_QUALITY = 75
+
 SECTION_HEADINGS = {
     "skills": "Skills",
     "experience": "Experience",
@@ -168,9 +172,15 @@ def rasterise(path: Path, dpi: int = SCAN_DPI) -> None:
     scanned = fitz.open()
     for page in source:
         pixmap = page.get_pixmap(dpi=dpi)
+        # JPEG rather than a raw pixmap. A lossless 200 DPI page runs to about
+        # 11 MB, which no real scanner produces and no sane upload limit should
+        # have to accommodate. Real scans are compressed, and the artefacts
+        # that introduces are also what OCR has to cope with in production.
         target = scanned.new_page(width=page.rect.width, height=page.rect.height)
-        target.insert_image(target.rect, pixmap=pixmap)
-    scanned.save(temporary)
+        target.insert_image(
+            target.rect, stream=pixmap.tobytes("jpeg", jpg_quality=JPEG_QUALITY)
+        )
+    scanned.save(temporary, deflate=True, garbage=4)
     scanned.close()
     source.close()
 

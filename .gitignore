@@ -38,3 +38,11 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Product data (generated at runtime)
+data/store/
+data/uploads/
+data/ingested/
+data/snapshots/
+data/activity/
+*.tsbuildinfo

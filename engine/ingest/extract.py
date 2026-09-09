@@ -20,11 +20,25 @@ different engine and present the result as though the intended one had worked.
 
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import Protocol
 
 import fitz  # PyMuPDF
 import numpy as np
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# On Windows the worker must not try to attach to a console: under a server
+# process there is not one to attach to, and the attempt hangs the child.
+_SPAWN_FLAGS: dict[str, int] = (
+    {"creationflags": subprocess.CREATE_NO_WINDOW}
+    if hasattr(subprocess, "CREATE_NO_WINDOW")
+    else {}
+)
 
 from engine.ingest.layers import (
     ExtractorName,
@@ -96,102 +110,112 @@ class PdfTextLayerExtractor:
 
 
 class PaddleOcrExtractor:
-    """Recognises text from a rasterised image of the page.
+    """Recognises text from page images, in a subprocess.
 
-    The engine is constructed lazily on first use: importing PaddleOCR pulls in
-    Paddle and loads several models, which should not happen merely because
-    something imported this module.
+    PaddleOCR runs out-of-process deliberately. In this environment it
+    intermittently segfaults during `predict`, and a native crash inside the
+    API server would take the server down mid-request rather than failing one
+    page. Isolated, a crash becomes a non-zero exit code that this class turns
+    into `ExtractionUnavailable`, and the page is honestly recorded as
+    unreadable.
+
+    One worker handles a whole document, so the models load once per document
+    rather than once per page.
     """
 
     name = ExtractorName.PADDLEOCR
 
-    def __init__(self, *, dpi: int = DEFAULT_OCR_DPI, lang: str = "en") -> None:
+    def __init__(
+        self,
+        *,
+        dpi: int = DEFAULT_OCR_DPI,
+        lang: str = "en",
+        timeout: float = 600.0,
+    ) -> None:
         self.dpi = dpi
         self.lang = lang
-        self._engine = None
+        self.timeout = timeout
 
-    def engine(self):
-        """Build the recognition pipeline, once.
+    def read_document(
+        self, path: Path, pages: list[int] | None = None
+    ) -> dict[int, list[RawLine]]:
+        """OCR the requested pages, returning raw lines keyed by page number."""
+        command = [
+            sys.executable,
+            "-m",
+            "tools.ocr_worker",
+            str(path),
+            "--dpi",
+            str(self.dpi),
+            "--lang",
+            self.lang,
+        ]
+        if pages:
+            command += ["--pages", ",".join(str(number) for number in pages)]
 
-        `enable_mkldnn=False` is required, not tuning. With Paddle 3.3.1 the
-        oneDNN CPU path raises `ConvertPirAttribute2RuntimeAttribute not
-        support [pir::ArrayAttribute<pir::DoubleAttribute>]` during predict,
-        which kills the run outright. Orientation classification and unwarping
-        are off because these are flat, upright pages and both stages cost
-        time without changing the result.
-        """
-        if self._engine is not None:
-            return self._engine
+        environment = dict(os.environ)
+        environment.setdefault("PYTHONPATH", str(PROJECT_ROOT))
 
         try:
-            from paddleocr import PaddleOCR
-        except Exception as error:  # pragma: no cover - environment dependent
-            raise ExtractionUnavailable(
-                f"PaddleOCR could not be imported: {error}"
-            ) from error
-
-        try:
-            self._engine = PaddleOCR(
-                use_doc_orientation_classify=False,
-                use_doc_unwarping=False,
-                use_textline_orientation=False,
-                enable_mkldnn=False,
-                lang=self.lang,
+            completed = subprocess.run(
+                command,
+                cwd=str(PROJECT_ROOT),
+                capture_output=True,
+                # Detach stdin explicitly. Spawned from a server thread the
+                # child would otherwise inherit the parent's console handle and
+                # can block forever waiting on a stream nobody writes to.
+                stdin=subprocess.DEVNULL,
+                timeout=self.timeout,
+                env=environment,
+                check=False,
+                **_SPAWN_FLAGS,
             )
-        except Exception as error:  # pragma: no cover - environment dependent
+        except subprocess.TimeoutExpired as error:
             raise ExtractionUnavailable(
-                f"PaddleOCR could not be initialised: {error}"
+                f"the OCR worker did not finish within {self.timeout:g}s"
             ) from error
 
-        return self._engine
-
-    def read_page(self, page: fitz.Page, page_number: int) -> list[RawLine]:
-        engine = self.engine()
-        image = _rasterise(page, self.dpi)
-        scale = POINTS_PER_INCH / self.dpi
+        if completed.returncode != 0:
+            detail = completed.stderr.decode("utf-8", "replace").strip().splitlines()
+            tail = detail[-1] if detail else "no diagnostic output"
+            raise ExtractionUnavailable(
+                f"the OCR worker exited with code {completed.returncode} "
+                f"({tail}); the page was not read"
+            )
 
         try:
-            prediction = engine.predict(input=image)
-        except Exception as error:
+            payload = json.loads(completed.stdout.decode("utf-8", "replace"))
+        except json.JSONDecodeError as error:
             raise ExtractionUnavailable(
-                f"PaddleOCR failed while reading page {page_number}: {error}"
+                f"the OCR worker returned output that could not be parsed: {error}"
             ) from error
 
-        if not prediction:
-            return []
+        scale = POINTS_PER_INCH / max(payload.get("dpi", self.dpi), 1)
+        recognised: dict[int, list[RawLine]] = {}
 
-        result = prediction[0]
-        texts = result.get("rec_texts") or []
-        scores = result.get("rec_scores") or []
-        polygons = result.get("rec_polys")
-        if polygons is None:
-            polygons = result.get("dt_polys") or []
-
-        lines: list[RawLine] = []
-        for index, text in enumerate(texts):
-            if not str(text).strip():
-                continue
-            if index >= len(polygons):
-                # A recognised string with no box cannot be cited to a place on
-                # the page, so it is not admitted as provenance-bearing text.
-                continue
-
-            box = _bbox_from_polygon(polygons[index], scale)
-            if box is None:
-                continue
-
-            lines.append(
-                RawLine(
-                    id=f"p{page_number}-l{len(lines) + 1:03d}",
-                    page_number=page_number,
-                    bbox=box,
-                    text=str(text),
-                    extractor=self.name,
-                    confidence=float(scores[index]) if index < len(scores) else None,
+        for entry in payload.get("pages", []):
+            number = int(entry["page_number"])
+            lines: list[RawLine] = []
+            for item in entry.get("lines", []):
+                box = _bbox_from_polygon(item.get("poly"), scale)
+                if box is None:
+                    # A recognised string with no usable box cannot be cited to
+                    # a place on the page, so it is not admitted as
+                    # provenance-bearing text.
+                    continue
+                lines.append(
+                    RawLine(
+                        id=f"p{number}-l{len(lines) + 1:03d}",
+                        page_number=number,
+                        bbox=box,
+                        text=str(item.get("text", "")),
+                        extractor=self.name,
+                        confidence=item.get("score"),
+                    )
                 )
-            )
+            recognised[number] = lines
 
-        return lines
+        return recognised
 
 
 class DocumentReader:
@@ -215,14 +239,71 @@ class DocumentReader:
         )
 
     def read(self, path: str | Path, *, document_id: str | None = None) -> RawDocument:
+        """Read a whole document: text layer first, then one OCR pass.
+
+        The two passes are separate because OCR is expensive and, here, fragile.
+        Reading the text layer for every page first means the OCR worker is only
+        started when some page actually needs it, and is started exactly once.
+        """
         source = Path(path)
         payload = source.read_bytes()
 
+        geometry: dict[int, tuple[float, float]] = {}
+        embedded: dict[int, list[RawLine]] = {}
+        failures: dict[int, str] = {}
+
         with fitz.open(source) as document:
-            pages = [
-                self._read_page(page, number)
-                for number, page in enumerate(document, start=1)
-            ]
+            for number, page in enumerate(document, start=1):
+                geometry[number] = (page.rect.width, page.rect.height)
+                try:
+                    lines = self.text_layer.read_page(page, number)
+                except Exception as error:
+                    failures[number] = str(error)
+                    continue
+                if lines:
+                    embedded[number] = lines
+
+        needs_ocr = [
+            number
+            for number in sorted(geometry)
+            if number not in embedded and number not in failures
+        ]
+
+        recognised: dict[int, list[RawLine]] = {}
+        ocr_error = ""
+        if needs_ocr:
+            try:
+                recognised = self.ocr.read_document(source, needs_ocr)
+            except ExtractionUnavailable as error:
+                ocr_error = str(error)
+            except Exception as error:  # pragma: no cover - defensive
+                ocr_error = f"the OCR pass failed unexpectedly: {error}"
+
+            # A recogniser that returns nothing at all, for every page it was
+            # given, has far more likely failed than read a document that was
+            # blank throughout. Reporting that as "no text detected" would make
+            # a broken engine indistinguishable from an empty page, so the
+            # inference is stated rather than quietly resolved the wrong way.
+            if not ocr_error and not any(recognised.get(n) for n in needs_ocr):
+                ocr_error = (
+                    "the OCR engine returned no text for any of the "
+                    f"{len(needs_ocr)} page(s) it was given; that more likely "
+                    "means recognition failed than that every page was blank, "
+                    "so the pages are reported as unread rather than empty"
+                )
+
+        pages = [
+            self._assemble(
+                number,
+                geometry[number],
+                embedded=embedded.get(number),
+                recognised=recognised.get(number),
+                failure=failures.get(number),
+                ocr_attempted=number in needs_ocr,
+                ocr_error=ocr_error,
+            )
+            for number in sorted(geometry)
+        ]
 
         return RawDocument(
             document_id=document_id or source.stem,
@@ -231,45 +312,69 @@ class DocumentReader:
             pages=pages,
         )
 
-    def _read_page(self, page: fitz.Page, number: int) -> RawPage:
-        """Read one page, reporting precisely how it went."""
-        try:
-            lines = self.text_layer.read_page(page, number)
-        except Exception as error:
-            return _failed_page(page, number, ExtractorName.PDF_TEXT_LAYER, str(error))
+    def _assemble(
+        self,
+        number: int,
+        size: tuple[float, float],
+        *,
+        embedded: list[RawLine] | None,
+        recognised: list[RawLine] | None,
+        failure: str | None,
+        ocr_attempted: bool,
+        ocr_error: str,
+    ) -> RawPage:
+        """Turn one page's outcome into a `RawPage` that states what happened."""
+        width, height = size
 
-        if lines:
+        if failure is not None:
             return RawPage(
                 page_number=number,
-                width=page.rect.width,
-                height=page.rect.height,
+                width=width,
+                height=height,
                 extractor=ExtractorName.PDF_TEXT_LAYER,
-                status=PageStatus.TEXT_EXTRACTED,
-                lines=lines,
+                status=PageStatus.EXTRACTION_FAILED,
+                lines=[],
+                note=failure,
             )
 
-        # No embedded text. This is where OCR earns its place.
-        try:
-            recognised = self.ocr.read_page(page, number)
-        except ExtractionUnavailable as error:
+        if embedded:
             return RawPage(
                 page_number=number,
-                width=page.rect.width,
-                height=page.rect.height,
+                width=width,
+                height=height,
+                extractor=ExtractorName.PDF_TEXT_LAYER,
+                status=PageStatus.TEXT_EXTRACTED,
+                lines=embedded,
+            )
+
+        if not ocr_attempted:
+            return RawPage(
+                page_number=number,
+                width=width,
+                height=height,
+                extractor=ExtractorName.PDF_TEXT_LAYER,
+                status=PageStatus.NO_TEXT_DETECTED,
+                lines=[],
+                note="the page carries no embedded text",
+            )
+
+        if ocr_error:
+            return RawPage(
+                page_number=number,
+                width=width,
+                height=height,
                 extractor=ExtractorName.PADDLEOCR,
                 status=PageStatus.OCR_UNAVAILABLE,
                 lines=[],
                 dpi=self.ocr.dpi,
-                note=str(error),
+                note=ocr_error,
             )
-        except Exception as error:
-            return _failed_page(page, number, ExtractorName.PADDLEOCR, str(error))
 
         if not recognised:
             return RawPage(
                 page_number=number,
-                width=page.rect.width,
-                height=page.rect.height,
+                width=width,
+                height=height,
                 extractor=ExtractorName.PADDLEOCR,
                 status=PageStatus.NO_TEXT_DETECTED,
                 lines=[],
@@ -279,8 +384,8 @@ class DocumentReader:
 
         return RawPage(
             page_number=number,
-            width=page.rect.width,
-            height=page.rect.height,
+            width=width,
+            height=height,
             extractor=ExtractorName.PADDLEOCR,
             status=PageStatus.TEXT_EXTRACTED,
             lines=recognised,
@@ -291,31 +396,6 @@ class DocumentReader:
 # --------------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------------
-
-
-def _failed_page(
-    page: fitz.Page, number: int, extractor: ExtractorName, reason: str
-) -> RawPage:
-    return RawPage(
-        page_number=number,
-        width=page.rect.width,
-        height=page.rect.height,
-        extractor=extractor,
-        status=PageStatus.EXTRACTION_FAILED,
-        lines=[],
-        note=reason,
-    )
-
-
-def _rasterise(page: fitz.Page, dpi: int) -> np.ndarray:
-    """Render a page to the BGR array PaddleOCR expects."""
-    pixmap = page.get_pixmap(dpi=dpi)
-    image = np.frombuffer(pixmap.samples, dtype=np.uint8).reshape(
-        pixmap.height, pixmap.width, pixmap.n
-    )
-    if pixmap.n == 4:
-        image = image[:, :, :3]
-    return np.ascontiguousarray(image[:, :, ::-1])
 
 
 def _bbox_from_polygon(polygon, scale: float) -> BoundingBox | None:

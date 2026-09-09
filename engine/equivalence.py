@@ -33,6 +33,8 @@ SKILL_ALIASES: dict[str, set[str]] = {
                          "azure", "gcp", "google cloud", "cloud infrastructure"},
     "Containerization": {"containerization", "docker", "podman", "containers"},
     "Kubernetes": {"kubernetes", "k8s", "kube"},
+    "Container Orchestration": {"container orchestration", "container orchestrator",
+                                "orchestration platform", "workload orchestration"},
     "Simulation": {"simulation", "gazebo", "rviz", "isaac sim", "webots"},
     "Machine Learning": {"machine learning", "ml", "supervised learning",
                          "scikit-learn", "sklearn", "ai/ml", "ai ml",
@@ -53,6 +55,28 @@ RELATED_SKILLS: dict[str, set[str]] = {
     "Deep Learning": {"machine learning", "ml"},
     "Robotics": {"arduino", "embedded systems", "iot", "mechatronics"},
     "Simulation": {"cad", "solidworks", "blender"},
+    # The case an evaluator asked about directly. A managed container service
+    # is genuinely adjacent to container orchestration, and a great many
+    # candidates who have used ECS have never configured a scheduler, written
+    # a manifest, or handled a rollout. Accepting it as equivalent would let a
+    # keyword do the work the evidence is supposed to do - so it lands here,
+    # is surfaced to the recruiter with the reason, and must be argued for by
+    # actual evidence rather than by vocabulary.
+    "Container Orchestration": {"ecs", "aws ecs", "elastic container service",
+                                "fargate", "aws fargate", "ecr", "docker",
+                                "docker compose", "docker-compose",
+                                "containerization", "containers", "podman"},
+    "Kubernetes": {"ecs", "aws ecs", "elastic container service", "docker",
+                   "docker compose", "docker swarm", "nomad"},
+}
+
+# Canonical skills that genuinely denote the same capability. Kept separate
+# from SKILL_ALIASES because both names are first-class requirements a
+# requisition might ask for by either wording, and folding one into the other
+# would silently rename what the recruiter actually wrote.
+EQUIVALENT_CANONICALS: dict[str, set[str]] = {
+    "Container Orchestration": {"Kubernetes"},
+    "Kubernetes": {"Container Orchestration"},
 }
 
 _PUNCTUATION = re.compile(r"[^a-z0-9+#. ]+")
@@ -108,6 +132,17 @@ def classify(candidate_phrase: str, required_skill: str) -> SkillMatch:
             kind=MatchKind.EQUIVALENT,
             explanation=(
                 f"'{candidate_phrase}' is recognised terminology for "
+                f"'{canonical}' and is accepted as equivalent."
+            ),
+        )
+
+    if canonical_for(candidate_phrase) in EQUIVALENT_CANONICALS.get(canonical, set()):
+        return SkillMatch(
+            surface_form=candidate_phrase,
+            canonical_skill=canonical,
+            kind=MatchKind.EQUIVALENT,
+            explanation=(
+                f"'{candidate_phrase}' denotes the same capability as "
                 f"'{canonical}' and is accepted as equivalent."
             ),
         )
