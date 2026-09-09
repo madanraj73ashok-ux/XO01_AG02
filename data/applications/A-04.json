@@ -1,0 +1,26 @@
+{
+  "id": "A-04",
+  "candidate_name": "Aisha Fernandes",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, Git, Robotics, Kubernetes"
+    },
+    {
+      "kind": "experience",
+      "text": "No professional experience yet."
+    },
+    {
+      "kind": "projects",
+      "text": "Coursework assignment: a Python inventory tracker using SQLite."
+    },
+    {
+      "kind": "education",
+      "text": "B.Tech Computer Science, 2022 - 2026. Coursework in Robotics, Kubernetes and Cloud Deployment, Operating Systems and Databases. Completed an online certificate in Python."
+    },
+    {
+      "kind": "cover_note",
+      "text": "My exposure to robotics and cloud deployment is from coursework. I am familiar with Kubernetes concepts from a university module and would like to apply them professionally."
+    }
+  ]
+}

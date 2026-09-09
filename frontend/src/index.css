@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-night text-slate-100 antialiased;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-white/10 bg-panel/60 p-5;
+  }
+  .eyebrow {
+    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-soft;
+  }
+  .pill {
+    @apply inline-flex items-center rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider;
+  }
+}

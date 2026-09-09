@@ -1,0 +1,26 @@
+{
+  "id": "A-06",
+  "candidate_name": "Nandini Rao",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, Git, Docker, image processing"
+    },
+    {
+      "kind": "experience",
+      "text": "Backend Developer, Finlyte (Jun 2024 - Jul 2026). Built Python services for a payments platform, wrote the containerised build with Docker, and owned the automated test suite. Managed releases through a Git branching workflow with peer review."
+    },
+    {
+      "kind": "projects",
+      "text": "Self-directed transition into robotics: built an image processing pipeline in Python that tracks objects from a webcam feed, as preparation for perception work."
+    },
+    {
+      "kind": "education",
+      "text": "B.Sc Computer Science, 2019 - 2022."
+    },
+    {
+      "kind": "cover_note",
+      "text": "I am moving from backend engineering into robotics. My Python, testing and version control practice transfers directly; my robotics work so far is self-directed rather than professional."
+    }
+  ]
+}

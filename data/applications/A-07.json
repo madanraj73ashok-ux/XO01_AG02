@@ -4,7 +4,7 @@
   "sections": [
     {
       "kind": "skills",
-      "text": "Python, ROS 2, OpenCV, AWS, Git, Gazebo"
+      "text": "Python, ROS 2, OpenCV, Git, Gazebo"
     },
     {
       "kind": "experience",

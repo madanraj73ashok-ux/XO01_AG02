@@ -1,0 +1,26 @@
+{
+  "id": "A-05",
+  "candidate_name": "Deepak Iyer",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python 3, Robot Operating System 2, image processing, source control, Gazebo"
+    },
+    {
+      "kind": "experience",
+      "text": "Junior Software Engineer, Helix Robotics (Mar 2025 - Aug 2026). Developed Robot Operating System 2 packages for an autonomous inspection rover, including a navigation behaviour tree and a diagnostics publisher. Wrote the Python tooling for log replay. Collaborated through a branching workflow on a shared repository."
+    },
+    {
+      "kind": "projects",
+      "text": "Built an image processing pipeline for detecting corrosion in inspection footage, integrated into the rover's Robot Operating System 2 stack."
+    },
+    {
+      "kind": "education",
+      "text": "B.Tech Electronics, 2021 - 2025."
+    },
+    {
+      "kind": "cover_note",
+      "text": "My background is in autonomous inspection robots. I describe my work in the terminology my previous team used."
+    }
+  ]
+}

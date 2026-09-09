@@ -1,0 +1,26 @@
+{
+  "id": "A-08",
+  "candidate_name": "Karthik Subramanian",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, ROS 2, Robotics, Git, Gazebo, Kubernetes"
+    },
+    {
+      "kind": "experience",
+      "text": "Research Assistant (part-time), University Robotics Lab (Aug 2025 - Aug 2026). Supported ROS 2 experiments for a manipulator arm and maintained the lab's Git repository."
+    },
+    {
+      "kind": "projects",
+      "text": "Final-year project: an autonomous rover using ROS 2 and Gazebo simulation for path planning. Separate academic project: deployed a small microservice to a Kubernetes cluster on a university-provided cloud account, including manifests and a rolling update demonstration."
+    },
+    {
+      "kind": "education",
+      "text": "M.Tech Robotics, 2024 - 2026. B.Tech Mechanical, 2020 - 2024."
+    },
+    {
+      "kind": "cover_note",
+      "text": "My robotics work is largely academic but hands-on. My cloud deployment experience is limited to a university project rather than production."
+    }
+  ]
+}

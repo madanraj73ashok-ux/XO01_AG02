@@ -1,0 +1,26 @@
+{
+  "id": "A-01",
+  "candidate_name": "Meera Krishnan",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, ROS 2, Robotics, Git, Gazebo, OpenCV"
+    },
+    {
+      "kind": "experience",
+      "text": "Robotics Engineer (Associate), Tarang Automation (Feb 2025 - Aug 2026). Developed ROS 2 nodes for a warehouse mobile robot, implemented the Nav2 costmap tuning, and maintained the Python test harness used for regression runs. Worked in a shared Git repository with review-gated merges."
+    },
+    {
+      "kind": "projects",
+      "text": "Built a differential-drive robot in Gazebo simulation with a ROS 2 control stack. Implemented an OpenCV lane-detection module used for the robot's guidance."
+    },
+    {
+      "kind": "education",
+      "text": "B.E. Robotics and Automation, 2021 - 2025."
+    },
+    {
+      "kind": "cover_note",
+      "text": "I have hands-on ROS 2 and robotics experience from a full-time associate role. I have not worked on cloud deployment."
+    }
+  ]
+}

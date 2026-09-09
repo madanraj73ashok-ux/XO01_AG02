@@ -1,0 +1,26 @@
+{
+  "id": "A-09",
+  "candidate_name": "Sneha Pillai",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, OpenCV, Computer Vision, Git, AWS, Docker"
+    },
+    {
+      "kind": "experience",
+      "text": "Computer Vision Engineer (Junior), Drishti Analytics (Jan 2025 - Aug 2026). Built OpenCV and PyTorch pipelines for retail shelf analytics, owned the annotation tooling in Python, and worked through pull requests on a shared Git repository."
+    },
+    {
+      "kind": "projects",
+      "text": "Deployed a vision inference service to AWS using Docker containers for a college showcase, including a public demo endpoint."
+    },
+    {
+      "kind": "education",
+      "text": "B.Tech Computer Science, 2021 - 2025."
+    },
+    {
+      "kind": "cover_note",
+      "text": "My strength is perception and vision. I have touched ROS 2 only briefly and would be learning it on the job."
+    }
+  ]
+}

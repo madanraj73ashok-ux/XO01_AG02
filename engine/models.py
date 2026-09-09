@@ -343,6 +343,39 @@ class RequirementFit(BaseModel):
         """
         return self.status is FitStatus.STRONG
 
+    @property
+    def confidence_factors(self) -> list[tuple[str, float]]:
+        """Every adjustment that produced the confidence figure.
+
+        Returned as (reason, delta) so the number can never be shown without
+        the arithmetic behind it. This is the guard against the confidence
+        becoming an opaque hiring score.
+        """
+        factors: list[tuple[str, float]] = [
+            (
+                f"Evidence {self.evidence_level.value} "
+                f"({self.evidence_level.label.lower()})",
+                self.evidence_level.rank / 4.0,
+            )
+        ]
+        if self.is_overclaimed:
+            factors.append(("Claimed more than the evidence carries", -0.15))
+        if self.match_kind is MatchKind.EQUIVALENT:
+            factors.append(("Matched on equivalent wording, not exact", -0.05))
+        if self.match_kind is MatchKind.RELATED:
+            factors.append(("Only adjacent technology found", -0.10))
+        return factors
+
+    @property
+    def confidence(self) -> float:
+        """How far the evidence supports this verdict, from 0 to 1.
+
+        Deliberately not a candidate score and never shown alone - the UI is
+        required to render `confidence_factors` alongside it.
+        """
+        total = sum(delta for _, delta in self.confidence_factors)
+        return max(0.0, min(1.0, total))
+
 
 class CandidateAssessment(BaseModel):
     """A candidate measured against every criterion in the requisition.
@@ -567,3 +600,83 @@ class PoolCoverage(BaseModel):
             lines.append("Closest evidence:         none found in this pool")
         lines.append(f"Conclusion:               {self.conclusion}")
         return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------
+# Trade-offs and shortlisting
+# --------------------------------------------------------------------------
+
+
+class Dimension(str, Enum):
+    """The axes candidates are compared on.
+
+    Kept as separate axes on purpose. Averaging them into one number is the
+    thing PS02 forbids, so the model has no field to put such a number in.
+    """
+
+    REQUIRED_COVERAGE = "required_coverage"
+    EVIDENCE_DEPTH = "evidence_depth"
+    BREADTH = "breadth"
+    CLAIM_INTEGRITY = "claim_integrity"
+
+    @property
+    def label(self) -> str:
+        return _DIMENSION_LABELS[self]
+
+
+_DIMENSION_LABELS: dict[Dimension, str] = {
+    Dimension.REQUIRED_COVERAGE: "Required coverage",
+    Dimension.EVIDENCE_DEPTH: "Evidence depth",
+    Dimension.BREADTH: "Breadth beyond the essentials",
+    Dimension.CLAIM_INTEGRITY: "Claim integrity",
+}
+
+
+class DimensionScore(BaseModel):
+    """One axis, its value, and the sentence explaining the value."""
+
+    dimension: Dimension
+    value: float
+    detail: str
+
+
+class ShortlistEntry(BaseModel):
+    """A candidate's place in the shortlist, with the case for and against.
+
+    `rank` orders the list, but `tradeoff` is the point: two adjacent ranks
+    usually mean "different strengths", not "better and worse".
+    """
+
+    application_id: str
+    candidate_name: str
+    rank: int
+    dimensions: list[DimensionScore] = Field(default_factory=list)
+    strengths: list[str] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    best_fit: str
+    tradeoff: str
+
+    def score_for(self, dimension: Dimension) -> float:
+        return next(
+            (d.value for d in self.dimensions if d.dimension is dimension), 0.0
+        )
+
+
+class ComparisonLine(BaseModel):
+    """How two candidates differ on one axis."""
+
+    dimension: Dimension
+    left_value: float
+    right_value: float
+    stronger: str | None
+    detail: str
+
+
+class Comparison(BaseModel):
+    """A head-to-head that deliberately refuses to declare a winner."""
+
+    left_id: str
+    right_id: str
+    lines: list[ComparisonLine] = Field(default_factory=list)
+    verdict: str

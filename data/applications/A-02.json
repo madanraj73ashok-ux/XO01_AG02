@@ -1,0 +1,26 @@
+{
+  "id": "A-02",
+  "candidate_name": "Rohit Bhatia",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, ROS 2, Robotics, Machine Learning, Deep Learning, Computer Vision, Cloud Deployment, Git, Docker, Simulation"
+    },
+    {
+      "kind": "experience",
+      "text": "No professional experience listed."
+    },
+    {
+      "kind": "projects",
+      "text": "Various college projects."
+    },
+    {
+      "kind": "education",
+      "text": "B.Tech Information Technology, 2022 - 2026."
+    },
+    {
+      "kind": "cover_note",
+      "text": "I am an expert in robotics, an expert in machine learning, and highly experienced with cloud deployment and computer vision. I have advanced knowledge of ROS 2 and deep learning."
+    }
+  ]
+}

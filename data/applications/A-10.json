@@ -1,0 +1,26 @@
+{
+  "id": "A-10",
+  "candidate_name": "Arjun Nair",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "Python, ROS 2, Robotics, Git, Gazebo, Computer Vision, Machine Learning"
+    },
+    {
+      "kind": "experience",
+      "text": "Senior Robotics Software Engineer, Vahan Systems (Jul 2019 - Aug 2026). Led development of the ROS 2 navigation and perception stack for an autonomous yard vehicle. Designed the simulation-in-the-loop test rig in Gazebo, implemented the OpenCV obstacle classifier, and maintained the Python tooling used across the team. Owned the Git release process."
+    },
+    {
+      "kind": "projects",
+      "text": "Built an internal ROS 2 diagnostics dashboard adopted across three product teams."
+    },
+    {
+      "kind": "education",
+      "text": "M.E. Robotics, 2017 - 2019. B.E. Mechatronics, 2013 - 2017."
+    },
+    {
+      "kind": "cover_note",
+      "text": "I have seven years of professional robotics experience. I am applying to a junior-titled role because the work itself matches my background; I have no production cloud deployment experience."
+    }
+  ]
+}

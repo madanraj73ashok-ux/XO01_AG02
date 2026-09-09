@@ -1,0 +1,26 @@
+{
+  "id": "A-12",
+  "candidate_name": "Farah Sheikh",
+  "sections": [
+    {
+      "kind": "skills",
+      "text": "C++, Arduino, Raspberry Pi, embedded systems, Python, Git"
+    },
+    {
+      "kind": "experience",
+      "text": "Embedded Firmware Intern, Kavach Electronics (Jun 2025 - May 2026). Wrote Arduino firmware for a sensor node and helped bring up a Raspberry Pi gateway. Used Git for source control across the team."
+    },
+    {
+      "kind": "projects",
+      "text": "Line-following and obstacle-avoiding robots built on Arduino with ultrasonic sensors, programmed in C++."
+    },
+    {
+      "kind": "education",
+      "text": "B.E. Electronics and Communication, 2022 - 2026."
+    },
+    {
+      "kind": "cover_note",
+      "text": "I am an expert in robotics from my embedded and Arduino work, and I am confident I can pick up any robotics framework quickly."
+    }
+  ]
+}
