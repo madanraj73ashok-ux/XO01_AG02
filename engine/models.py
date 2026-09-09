@@ -488,3 +488,82 @@ class Contradiction(BaseModel):
             ]
         )
         return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------
+# Pool-level coverage
+# --------------------------------------------------------------------------
+
+
+class NearMiss(BaseModel):
+    """A candidate who came closest to a criterion nobody satisfied.
+
+    `note` describes what the candidate actually has, in terms traceable to
+    their own application - never an estimate of what they might have.
+    """
+
+    application_id: str
+    candidate_name: str
+    evidence_level: EvidenceLevel
+    note: str
+
+
+class PoolCoverage(BaseModel):
+    """How the whole applicant pool measures against one requirement.
+
+    A criterion nobody meets is a fact about the requisition and the market,
+    not a failing of any individual candidate - so it is reported at pool
+    level rather than buried in every candidate's assessment.
+    """
+
+    requirement_id: str
+    skill: str
+    necessity: Necessity
+    satisfied: list[str] = Field(default_factory=list)
+    total_candidates: int = 0
+    near_misses: list[NearMiss] = Field(default_factory=list)
+
+    @property
+    def satisfied_count(self) -> int:
+        return len(self.satisfied)
+
+    @property
+    def is_required(self) -> bool:
+        return self.necessity is Necessity.REQUIRED
+
+    @property
+    def is_gap(self) -> bool:
+        """True when no candidate in the pool demonstrates this criterion."""
+        return self.total_candidates > 0 and self.satisfied_count == 0
+
+    @property
+    def coverage_ratio(self) -> float:
+        if self.total_candidates == 0:
+            return 0.0
+        return self.satisfied_count / self.total_candidates
+
+    @property
+    def conclusion(self) -> str:
+        if self.is_gap:
+            return "No applicant fully demonstrates the required experience."
+        if self.satisfied_count == 1:
+            return "Only one applicant demonstrates this requirement."
+        return f"{self.satisfied_count} applicants demonstrate this requirement."
+
+    def render(self) -> str:
+        """The reviewer-facing block for a detected gap."""
+        lines = [
+            "POOL GAP DETECTED",
+            f"Requirement:              {self.skill}",
+            f"Candidates satisfying:    {self.satisfied_count} / {self.total_candidates}",
+        ]
+        if self.near_misses:
+            lines.append("Closest evidence:")
+            lines.extend(
+                f"  {miss.application_id} - {miss.note}"
+                for miss in self.near_misses
+            )
+        else:
+            lines.append("Closest evidence:         none found in this pool")
+        lines.append(f"Conclusion:               {self.conclusion}")
+        return "\n".join(lines)
