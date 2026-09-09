@@ -1,0 +1,34 @@
+# Environment / secrets — never commit these
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# LLM response cache (regenerable, keeps repo small)
+.cache/
+engine/.llm_cache/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

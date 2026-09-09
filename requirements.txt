@@ -1,0 +1,5 @@
+streamlit>=1.38
+pydantic>=2.8
+python-dotenv>=1.0
+pandas>=2.2
+pytest>=8.3
